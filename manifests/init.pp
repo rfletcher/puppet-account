@@ -152,13 +152,13 @@ define account(
       $dir_ensure = directory
       $dir_owner  = $username
       $dir_group  = $primary_group
-      User[$title] -> File["${title}_home"] -> File["${title}_sshdir"]
+      User[$title] -> File["${title}_home"]
     }
     absent: {
       $dir_ensure = absent
       $dir_owner  = undef
       $dir_group  = undef
-      File["${title}_sshdir"] -> File["${title}_home"] -> User[$title]
+      File["${title}_home"] -> User[$title]
     }
     default: {
       err( "Invalid value given for ensure: ${ensure}. Must be one of present,absent." )
@@ -187,17 +187,20 @@ define account(
       path    => $home_dir_real,
       owner   => $dir_owner,
       group   => $dir_group,
-      mode    => $home_dir_perms;
-
-    "${title}_sshdir":
-      ensure  => $dir_ensure,
-      path    => "${home_dir_real}/.ssh",
-      owner   => $dir_owner,
-      group   => $dir_group,
-      mode    => '0700';
+      mode    => $home_dir_perms,
   }
 
   if $ssh_key != undef {
+    File["${title}_home"]->
+    file {
+      "${title}_sshdir":
+        ensure  => $dir_ensure,
+        path    => "${home_dir_real}/.ssh",
+        owner   => $dir_owner,
+        group   => $dir_group,
+        mode    => '0700',
+    }
+
     File["${title}_sshdir"]->
     ssh_authorized_key {
       $title:

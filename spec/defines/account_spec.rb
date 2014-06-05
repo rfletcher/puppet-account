@@ -38,18 +38,11 @@ describe 'account' do
         'owner'   => title,
         'group'   => title,
         'mode'    => '0750',
-        'before'  => "File[#{title}_sshdir]",
       })
     end
 
     it do
-      should contain_file( "#{title}_sshdir" ).with({
-        'ensure'  => 'directory',
-        'path'    => "/home/#{title}/.ssh",
-        'owner'   => title,
-        'group'   => title,
-        'mode'    => '0700',
-      })
+      should_not contain_file( "#{title}_sshdir" )
     end
   end
 
@@ -65,6 +58,7 @@ describe 'account' do
       :uid            => 777,
       :allowdupe      => true,
       :groups         => [ 'sudo', 'users' ],
+      :ssh_key        => "foo",
     }}
 
     it do
@@ -91,10 +85,11 @@ describe 'account' do
 
     it do
       should contain_file( "#{title}_home" ).with({
-        'path'  => params[:home_dir],
-        'owner' => params[:username],
-        'group' => params[:username],
-        'mode'  => params[:home_dir_perms],
+        'path'   => params[:home_dir],
+        'owner'  => params[:username],
+        'group'  => params[:username],
+        'mode'   => params[:home_dir_perms],
+        'before' => "File[#{title}_sshdir]",
       })
     end
 
@@ -124,7 +119,7 @@ describe 'account' do
     end
 
     it do
-      should contain_file( "#{title}_sshdir" ).with({ 'group' => 'users' })
+      should_not contain_file( "#{title}_sshdir" )
     end
   end
 
@@ -145,7 +140,7 @@ describe 'account' do
     end
 
     it do
-      should contain_file( "#{title}_sshdir" ).with({ 'group' => params[:gid] })
+      should_not contain_file( "#{title}_sshdir" )
     end
   end
 end
